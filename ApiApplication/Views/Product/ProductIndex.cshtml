@@ -1,0 +1,194 @@
+﻿
+@{
+    ViewBag.Title = "ProductIndex";
+    
+}
+<style>
+    #statusMsg {
+        height: 50px;
+    }
+</style>
+
+<div>
+    <p id="statusMsg">
+        @*Status Msg will be dissplayed here*@
+    </p>
+</div>
+<h2>Products </h2>
+
+<div>
+    <input class="btn btn-info" id="loadBtn" type="button" value="Load Data" />
+    <!-- Trigger the modal with a button -->
+    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModal">Create Product</button>
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th>Title</th>
+                <th>Price</th>
+                <th>Quantity</th>
+                <th>Total</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+
+</div>
+
+@*Create Form*@
+<div>
+    <!-- Modal -->
+    <div id="myModal" class="modal fade" role="dialog">
+        <div class="modal-dialog ">
+
+            <!-- Modal content-->
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal">&times;</button>
+                    <h4 class="modal-title">New Product</h4>
+                </div>
+                <div class="modal-body">
+                    
+                        <form id="createForm">
+                            <div class="form-group">
+                                <label for="productTitle">Product's Title</label>
+                                <input id="productTitle" class="form-control" type="text" value="" placeholder="Give Product's Title" />
+                            </div>
+                            <div class="form-group">
+                                <label for="productPrice">Product's Price</label>
+                                <input id="productPrice" class="form-control" type="number" value="" placeholder="Give Product's Price" />
+                            </div>
+                            <div class="form-group">
+                                <label for="productQuantity">Product's Quantity</label>
+                                <input id="productQuantity" class="form-control" type="number" value="" placeholder="Give Product's Quantity" />
+                            </div>
+
+                            <div>
+                                <input id="addProduct" type="submit" class="btn btn-success"  value="Add" />
+                                <button type="reset" class="btn btn-primary">Clear </button>
+                            </div>
+                        </form>
+                 
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section scripts{
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+   
+    <script>
+
+        $("#loadBtn").on("click", onLoadDataHandler);
+        $("#createForm").on("submit", onAddProductHandler);
+
+        //--------------Handlers---------------------
+        //Loading Data
+        function onLoadDataHandler() {
+            $("table > tbody").empty();
+            var settings = {
+                "url": "https://localhost:44304/ProductApi/GetAllProducts",
+                "method": "GET",
+                "timeout": 0,
+            };
+
+            $.ajax(settings).done(function (products) {
+                products.forEach(CreateRow);
+            }).fail(function () {
+                DisplayMessage("alert-danger", "Fail", "Failed to load Data");
+            });
+        }
+        //Create Product
+        function onAddProductHandler(event) {
+           
+            let title = $("#productTitle").val();
+            let price = $("#productPrice").val();
+            let quantity = $("#productQuantity").val();
+            let product = { title, price, quantity };
+            CreateRow(product)
+            var settings = {
+                "url": "https://localhost:44304/ProductApi/CreateProduct",
+                "method": "POST",
+                "timeout": 0,
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "data": JSON.stringify(product),
+                
+            };
+            
+            
+            $.ajax(settings).done(function (response) {
+                
+                DisplayMessage("alert-success", "Success", "Product Created Successfully");
+               
+            }).fail(function () {
+                DisplayMessage("alert-danger", "Fail", "Failed to Create Product");
+            });
+        }
+        //Delete Product
+        function onDeleteProductHandler(id) {
+            var settings = {
+                "url": "https://localhost:44304/ProductApi/DeleteProductById?id=" + id,
+                "method": "DELETE",
+                "timeout": 0,
+            };
+
+            $.ajax(settings).done(function (response) {
+                onLoadDataHandler();
+                DisplayMessage("alert-success", "Success", "Product Deleted successfully");
+            }).fail(function () {
+                DisplayMessage("alert-danger", "Fail", "Failed to Delete Product");
+            });
+        }
+
+
+        //------------- End Handlers -----------------
+
+
+        //Creating tbody element with data
+        function CreateRow(product) {
+            template = `
+                         <tr>
+                             <td>${product.Title}</td>
+                             <td>${product.Price}</td>
+                             <td>${product.Quantity}</td>
+                             <td>
+                                 ${CalculationTotal(product.Price, product.Quantity)}
+                             </td>
+                              <td>
+                                 <button class="btn btn-success">Edit</button>
+                                 <button onclick="onDeleteProductHandler(${product.Id})" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span></button>
+                             </td>
+                         </tr>
+                       `
+            let ele = $(template)
+            $("table > tbody").append(ele)
+
+        }
+        //Calculating the total number between Price and Quantity from each product
+        function CalculationTotal(price, quantity) {
+            total = price * quantity;
+            return total
+        }
+
+        function DisplayMessage(alerType, messageType, message) {
+            let template = `
+                             <div class="alert ${alerType} alert-dismissible">
+                                 <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                 <strong>${messageType}!</strong> ${message}.
+                             </div>
+                           `
+            $("#statusMsg").append(template);
+        }
+
+    </script>
+
+
+}
