@@ -20,12 +20,17 @@ namespace ApiApplication.Repositories
             db = context;
         }
 
-        public IEnumerable<Product> GetAllProducts()
+        public IEnumerable<Product> GetAll()
         {
             return db.Products.ToList();
         }
 
-        public Product GetProductById(int? id)
+        public IEnumerable<Product> GetAllWithShops()
+        {
+            return db.Products.Include(x => x.Shop).ToList();
+        }
+
+        public Product GetById(int? id)
         {
             return db.Products.Find(id);
         }

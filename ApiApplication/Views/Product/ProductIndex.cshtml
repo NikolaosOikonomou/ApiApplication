@@ -1,32 +1,42 @@
 ﻿
 @{
     ViewBag.Title = "ProductIndex";
-    
-}
-<style>
-    #statusMsg {
-        height: 50px;
-    }
-</style>
 
-<div>
+}
+@section MyStyle{
+    <style>
+        #messageArea {
+            height: 80px;
+        }
+
+        #statusMsg {
+            height: 80px;
+        }
+    </style>
+}
+
+
+<div id="messageArea">
     <p id="statusMsg">
         @*Status Msg will be dissplayed here*@
     </p>
 </div>
-<h2>Products </h2>
 
+@*------------------------- Table ---------------------------*@
 <div>
+    <h2>Products </h2>
     <input class="btn btn-info" id="loadBtn" type="button" value="Load Data" />
     <!-- Trigger the modal with a button -->
-    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#myModal">Create Product</button>
+    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#createModal">Create Product</button>
     <table class="table table-striped">
         <thead>
             <tr>
+                <th></th>
                 <th>Title</th>
                 <th>Price</th>
                 <th>Quantity</th>
                 <th>Total</th>
+                @*<th>Shop</th>*@
                 <th>Actions</th>
             </tr>
         </thead>
@@ -36,10 +46,10 @@
 
 </div>
 
-@*Create Form*@
+@*--------------------------- Create Form -----------------------------*@
 <div>
     <!-- Modal -->
-    <div id="myModal" class="modal fade" role="dialog">
+    <div id="createModal" class="modal fade" role="dialog">
         <div class="modal-dialog ">
 
             <!-- Modal content-->
@@ -49,27 +59,25 @@
                     <h4 class="modal-title">New Product</h4>
                 </div>
                 <div class="modal-body">
-                    
-                        <form id="createForm">
-                            <div class="form-group">
-                                <label for="productTitle">Product's Title</label>
-                                <input id="productTitle" class="form-control" type="text" value="" placeholder="Give Product's Title" />
-                            </div>
-                            <div class="form-group">
-                                <label for="productPrice">Product's Price</label>
-                                <input id="productPrice" class="form-control" type="number" value="" placeholder="Give Product's Price" />
-                            </div>
-                            <div class="form-group">
-                                <label for="productQuantity">Product's Quantity</label>
-                                <input id="productQuantity" class="form-control" type="number" value="" placeholder="Give Product's Quantity" />
-                            </div>
+                    <form id="createForm">
+                        <div class="form-group">
+                            <label for="productTitle">Product's Title</label>
+                            <input id="productTitle" class="form-control" type="text" value="" placeholder="Give Product's Title" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="productPrice">Product's Price</label>
+                            <input id="productPrice" class="form-control" type="number" value="" placeholder="Give Product's Price" required />
+                        </div>
+                        <div class="form-group">
+                            <label for="productQuantity">Product's Quantity</label>
+                            <input id="productQuantity" class="form-control" type="number" value="" placeholder="Give Product's Quantity" required />
+                        </div>
 
-                            <div>
-                                <input id="addProduct" type="submit" class="btn btn-success"  value="Add" />
-                                <button type="reset" class="btn btn-primary">Clear </button>
-                            </div>
-                        </form>
-                 
+                        <div>
+                            <input id="addProduct" type="submit" class="btn btn-success" value="Add" />
+                            <button type="reset" class="btn btn-primary">Clear </button>
+                        </div>
+                    </form>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
@@ -78,40 +86,87 @@
         </div>
     </div>
 </div>
+@*------------------------- Edit Form -------------------------*@
+
+<!-- Modal -->
+<div id="editModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">Edit Product</h4>
+            </div>
+            <div class="modal-body">
+                <form id="editForm">
+                    <input id="editProductId" type="hidden" value="" />
+                    <div class="form-group">
+                        <label for="editProductTitle">Product's Title</label>
+                        <input id="editProductTitle" class="form-control" type="text" value="" placeholder="Give Product's Title" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="editProductPrice">Product's Price</label>
+                        <input id="editProductPrice" class="form-control" type="number" value="" placeholder="Give Product's Price" required />
+                    </div>
+                    <div class="form-group">
+                        <label for="editProductQuantity">Product's Quantity</label>
+                        <input id="editProductQuantity" class="form-control" type="number" value="" placeholder="Give Product's Quantity" required />
+                    </div>
+                    <div>
+                        <input id="editFormBtn" type="submit" class="btn btn-success" value="Update Product" />
+                        <button type="reset" class="btn btn-primary">Clear </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
 
 
 @section scripts{
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
-   
+
     <script>
 
         $("#loadBtn").on("click", onLoadDataHandler);
         $("#createForm").on("submit", onAddProductHandler);
+        $("#editForm").on("submit", onEditProductFormHandler);
 
-        //--------------Handlers---------------------
-        //Loading Data
+
+        //------------------------- Handlers ----------------------------
+        //----------------- Loading Data
         function onLoadDataHandler() {
-            $("table > tbody").empty();
+            LoadSpiner();
             var settings = {
                 "url": "https://localhost:44304/ProductApi/GetAllProducts",
                 "method": "GET",
                 "timeout": 0,
             };
-
             $.ajax(settings).done(function (products) {
+                $("table > tbody").empty();
                 products.forEach(CreateRow);
+
+
             }).fail(function () {
                 DisplayMessage("alert-danger", "Fail", "Failed to load Data");
             });
         }
-        //Create Product
+        //---------------- Create Product
         function onAddProductHandler(event) {
-           
+
             let title = $("#productTitle").val();
             let price = $("#productPrice").val();
             let quantity = $("#productQuantity").val();
             let product = { title, price, quantity };
-            CreateRow(product)
+            CreateRow(product);
+            event.preventDefault();
+            ClearCreateFormInputs();
+            $("#createModal").click();
             var settings = {
                 "url": "https://localhost:44304/ProductApi/CreateProduct",
                 "method": "POST",
@@ -120,23 +175,68 @@
                     "Content-Type": "application/json"
                 },
                 "data": JSON.stringify(product),
-                
+
             };
-            
-            
             $.ajax(settings).done(function (response) {
-                
                 DisplayMessage("alert-success", "Success", "Product Created Successfully");
-               
+                onLoadDataHandler();
             }).fail(function () {
                 DisplayMessage("alert-danger", "Fail", "Failed to Create Product");
             });
         }
+        //---------------- Edit product
+        function onEditProductHandler(e, id) {
+            
+            var settings = {
+                "url": "https://localhost:44304/ProductApi/GetProductById?id=" + id,
+                "method": "POST",
+                "timeout": 0,
+            };
+
+            $.ajax(settings).done(function (product) {
+
+                $("#editProductId").val(product.Id);
+                $("#editProductTitle").val(product.Title);
+                $("#editProductPrice").val(product.Price);
+                $("#editProductQuantity").val(product.Quantity);
+                $("#editModal").modal("show");
+            }).fail(function () {
+                DisplayMessage("alert-danger", "Fail", "Failed to Load Product");
+            });
+        }
+
+        function onEditProductFormHandler(event) {
+            event.preventDefault();
+           
+            let id = $("#editProductId").val();
+            let title = $("#editProductTitle").val();
+            let price = $("#editProductPrice").val();
+            let quantity = $("#editProductQuantity").val();
+            let product = { title, price, quantity };
+            let productToJson = JSON.stringify(product);
+            var settings = {
+                "url": "https://localhost:44304/ProductApi/EditProductById?id="+id,
+                "method": "POST",
+                "timeout": 0,
+                "headers": {
+                    "Content-Type": "application/json"
+                },
+                "data": productToJson
+            };
+            $.ajax(settings).done(function (product) {
+                $("#editModal").modal("hide");
+                onLoadDataHandler();
+                DisplayMessage("alert-success", "Success", "Product Update successfully");
+            }).fail(function () {
+                DisplayMessage("alert-danger", "Fail", "Failed to Update Product");
+            });
+        }
+       
         //Delete Product
         function onDeleteProductHandler(id) {
             var settings = {
                 "url": "https://localhost:44304/ProductApi/DeleteProductById?id=" + id,
-                "method": "DELETE",
+                "method": "POST",
                 "timeout": 0,
             };
 
@@ -148,46 +248,69 @@
             });
         }
 
-
-        //------------- End Handlers -----------------
+        //-------------------- End Handlers ---------------------
 
 
         //Creating tbody element with data
         function CreateRow(product) {
             template = `
-                         <tr>
-                             <td>${product.Title}</td>
-                             <td>${product.Price}</td>
-                             <td>${product.Quantity}</td>
+                        <tr>
+                            <td class="productId">${product.Id}</td>
+                            <td class="productTitle" contenteditable="false">${product.Title}</td>
+                            <td class="productPrice" contenteditable="false">${product.Price}</td>
+                            <td class="productQuantity" contenteditable="false">${product.Quantity}</td>
+                            <td>
+                                ${CalculationTotal(product.Price, product.Quantity)}
+                            </td>
+                    
                              <td>
-                                 ${CalculationTotal(product.Price, product.Quantity)}
-                             </td>
-                              <td>
-                                 <button class="btn btn-success">Edit</button>
-                                 <button onclick="onDeleteProductHandler(${product.Id})" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span></button>
-                             </td>
-                         </tr>
-                       `
-            let ele = $(template)
-            $("table > tbody").append(ele)
-
+                                <button onclick="onEditProductHandler(this,${product.Id})" class=" btn btn-success " id="editBtn">Edit</button>
+                                <button onclick="onDeleteProductHandler(${product.Id})" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span></button>
+                            </td>
+                        </tr>
+                      `
+            let ele = $(template);
+            $("table > tbody").append(ele);
         }
+
+
         //Calculating the total number between Price and Quantity from each product
         function CalculationTotal(price, quantity) {
             total = price * quantity;
             return total
         }
-
+        //Display the apropriate message for every occasion
         function DisplayMessage(alerType, messageType, message) {
             let template = `
-                             <div class="alert ${alerType} alert-dismissible">
-                                 <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                 <strong>${messageType}!</strong> ${message}.
-                             </div>
-                           `
+                                                    <div class="alert ${alerType} alert-dismissible">
+                                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                                        <strong>${messageType}!</strong> ${message}.
+                                                    </div>
+                                                  `
             $("#statusMsg").append(template);
+            FadeOutStatusMessage();
+        }
+        //For the pop up alert message to automatically fade out
+        function FadeOutStatusMessage() {
+            $("#statusMsg").fadeOut(4000);
+        }
+        //Clearing the input values in the Create Form
+        function ClearCreateFormInputs() {
+            $("#productTitle").val("");
+            $("#productPrice").val("");
+            $("#productQuantity").val("");
+        }
+        //Display a "Loading" text while the data is loading
+        function LoadSpiner() {
+            template = `
+                         <div><b>Loading...<b></div>
+
+                       `
+            let ele = $(template);
+            $("table > tbody").append(ele);
         }
 
+  
     </script>
 
 

@@ -18,6 +18,6 @@ namespace ApiApplication.Models
             Products = new HashSet<Product>();
         }
 
-        public virtual ICollection<Product> Products { get; set; }
+        public  ICollection<Product> Products { get; set; }
     }
 }

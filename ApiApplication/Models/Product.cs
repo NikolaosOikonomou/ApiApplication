@@ -18,6 +18,6 @@ namespace ApiApplication.Models
         //Foreign Key
         public int? ShopId { get; set; }
         //Navigation
-        public Shop Shop { get; set; }
+        public  Shop Shop { get; set; }
     }
 }

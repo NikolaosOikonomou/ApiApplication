@@ -20,31 +20,63 @@ namespace ApiApplication.Controllers.ApiControllers
         {
             productRepo = new ProductRepository(db);
         }
-       
+
         public ActionResult GetAllProducts()
         {
-            var products = productRepo.GetAllProducts();
-            return Json(products, JsonRequestBehavior.AllowGet);
+            var products = productRepo.GetAllWithShops();
+           
+      
+            foreach (var product in products)
+            {
+               var e = product.Shop.Title;
+            }
+            var productsWithShops = products.Select(x => new
+            {
+                Title = x.Title,
+                Price = x.Price,
+                Quantity = x.Quantity,
+                ShopId = x.ShopId,
+                Shop = x.Shop.Title
+            });
+            return Json(productsWithShops, JsonRequestBehavior.AllowGet);
         }
 
-        [HttpDelete]
-        public ActionResult DeleteProductById(int? id)
+        [HttpPost]
+        public ActionResult GetProductById(int? id)
         {
-            if(id == null)
+            if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            var product = productRepo.GetProductById(id);
-            if(product == null)
+            var product = productRepo.GetById(id);
+            if (product == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.NotFound);
+            }
+
+            return Json(product, JsonRequestBehavior.AllowGet);
+
+        }
+
+        [HttpPost]
+        public ActionResult DeleteProductById(int? id)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            var product = productRepo.GetById(id);
+            
+            if (product == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadGateway);
             }
             if (ModelState.IsValid)
             {
                 productRepo.Delete(product);
                 return Json(product, JsonRequestBehavior.AllowGet);
             }
-           return new HttpStatusCodeResult(HttpStatusCode.NotAcceptable);
+            return new HttpStatusCodeResult(HttpStatusCode.NotAcceptable);
         }
 
         [HttpPost]
@@ -54,6 +86,30 @@ namespace ApiApplication.Controllers.ApiControllers
             {
                 productRepo.Add(product);
                 return Json(product, JsonRequestBehavior.AllowGet);
+            }
+            return new HttpStatusCodeResult(HttpStatusCode.NotAcceptable);
+        }
+
+        [HttpPost]
+        public ActionResult EditProductById(int? id, Product product)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            var pro = productRepo.GetById(id);
+            if (pro == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.NotFound);
+            }
+            pro.Title = product.Title;
+            pro.Quantity = product.Quantity;
+            pro.Price = product.Price;
+
+            if (ModelState.IsValid)
+            {
+                productRepo.Edit(pro);
+                return Json(pro, JsonRequestBehavior.AllowGet);
             }
             return new HttpStatusCodeResult(HttpStatusCode.NotAcceptable);
         }
