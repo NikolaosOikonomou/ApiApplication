@@ -18,7 +18,7 @@ namespace ApiApplication.Initialazers
             Shop s2 = new Shop() { Title = "Public", Region = "Athens" };
             Shop s3 = new Shop() { Title = "Plaisio", Region = "Athens" };
 
-            context.Shops.AddOrUpdate(x => x.Title, s1, s2, s3);
+            context.Shops.AddOrUpdate( s1, s2, s3);
             context.SaveChanges();
             #endregion
 
@@ -37,7 +37,7 @@ namespace ApiApplication.Initialazers
             s3.Products.Add(p5);
             s3.Products.Add(p6);
 
-            context.Products.AddOrUpdate(x => x.Title, p1, p2, p3, p4, p5, p6);
+            context.Products.AddOrUpdate( p1, p2, p3, p4, p5, p6);
             context.SaveChanges();
 
             #endregion

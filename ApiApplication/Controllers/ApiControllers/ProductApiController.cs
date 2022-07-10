@@ -16,39 +16,46 @@ namespace ApiApplication.Controllers.ApiControllers
 
         private ProductRepository productRepo;
 
+        private ShopRepository shopRepo;
+
         public ProductApiController()
         {
             productRepo = new ProductRepository(db);
+            shopRepo = new ShopRepository(db);
         }
 
         public ActionResult GetAllProducts()
         {
-            var products = productRepo.GetAllWithShops();
-           
-      
-            foreach (var product in products)
+            var products = productRepo.GetAll().Select(x => new Product
             {
-               var e = product.Shop.Title;
-            }
-            var productsWithShops = products.Select(x => new
-            {
+                Id = x.Id,
                 Title = x.Title,
                 Price = x.Price,
                 Quantity = x.Quantity,
                 ShopId = x.ShopId,
-                Shop = x.Shop.Title
-            });
-            return Json(productsWithShops, JsonRequestBehavior.AllowGet);
+                Shop = new Shop { Title = x.Shop?.Title }
+            }).ToList();
+
+
+            return Json(products, JsonRequestBehavior.AllowGet);
         }
 
-        [HttpPost]
+        [HttpGet]
         public ActionResult GetProductById(int? id)
         {
             if (id == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            var product = productRepo.GetById(id);
+            var product = productRepo.GetAll().Where(x => x.Id == id).Select(x => new Product
+            {
+                Id = x.Id,
+                Title = x.Title,
+                Price = x.Price,
+                Quantity = x.Quantity,
+                ShopId = x.ShopId,
+                Shop = new Shop { Id = x.Shop?.Id, Title = x.Shop?.Title, Region = x.Shop?.Region}
+            });
             if (product == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.NotFound);
@@ -56,6 +63,32 @@ namespace ApiApplication.Controllers.ApiControllers
 
             return Json(product, JsonRequestBehavior.AllowGet);
 
+        }
+
+        [HttpPost]
+        public ActionResult EditProductById(int? id, Product product, int? shopId)
+        {
+            if (id == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
+            }
+            var pro = productRepo.GetById(id);
+            if (pro == null)
+            {
+                return new HttpStatusCodeResult(HttpStatusCode.NotFound);
+            }
+            pro.Title = product.Title;
+            pro.Quantity = product.Quantity;
+            pro.Price = product.Price;
+            pro.ShopId = product.ShopId;
+            pro.Shop = shopRepo.GetById(shopId);
+
+            if (ModelState.IsValid)
+            {
+                productRepo.Edit(pro);
+                return Json(pro, JsonRequestBehavior.AllowGet);
+            }
+            return new HttpStatusCodeResult(HttpStatusCode.NotAcceptable);
         }
 
         [HttpPost]
@@ -90,29 +123,15 @@ namespace ApiApplication.Controllers.ApiControllers
             return new HttpStatusCodeResult(HttpStatusCode.NotAcceptable);
         }
 
-        [HttpPost]
-        public ActionResult EditProductById(int? id, Product product)
-        {
-            if (id == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
-            }
-            var pro = productRepo.GetById(id);
-            if (pro == null)
-            {
-                return new HttpStatusCodeResult(HttpStatusCode.NotFound);
-            }
-            pro.Title = product.Title;
-            pro.Quantity = product.Quantity;
-            pro.Price = product.Price;
+      
 
-            if (ModelState.IsValid)
-            {
-                productRepo.Edit(pro);
-                return Json(pro, JsonRequestBehavior.AllowGet);
-            }
-            return new HttpStatusCodeResult(HttpStatusCode.NotAcceptable);
+        [HttpGet]
+        public ActionResult GetAllShops()
+        {
+            var shops = shopRepo.GetAll().Select(x => new { x.Id, x.Title, x.Region });
+            return Json(shops, JsonRequestBehavior.AllowGet);
         }
+
 
         protected override void Dispose(bool disposing)
         {

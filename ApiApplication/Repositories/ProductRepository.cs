@@ -22,12 +22,9 @@ namespace ApiApplication.Repositories
 
         public IEnumerable<Product> GetAll()
         {
-            return db.Products.ToList();
-        }
+            var  products = db.Products.ToList();
 
-        public IEnumerable<Product> GetAllWithShops()
-        {
-            return db.Products.Include(x => x.Shop).ToList();
+            return products;
         }
 
         public Product GetById(int? id)

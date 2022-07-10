@@ -25,9 +25,9 @@
 @*------------------------- Table ---------------------------*@
 <div>
     <h2>Products </h2>
-    <input class="btn btn-info" id="loadBtn" type="button" value="Load Data" />
+    <input id="loadBtn" class="btn btn-info" type="button" value="Load Data" />
     <!-- Trigger the modal with a button -->
-    <button type="button" class="btn btn-success" data-toggle="modal" data-target="#createModal">Create Product</button>
+    <button id="createProductBtn" type="button" class="btn btn-primary" data-toggle="modal" data-target="#createModal">Create Product</button>
     <table class="table table-striped">
         <thead>
             <tr>
@@ -36,7 +36,7 @@
                 <th>Price</th>
                 <th>Quantity</th>
                 <th>Total</th>
-                @*<th>Shop</th>*@
+                <th>Shop</th>
                 <th>Actions</th>
             </tr>
         </thead>
@@ -72,7 +72,12 @@
                             <label for="productQuantity">Product's Quantity</label>
                             <input id="productQuantity" class="form-control" type="number" value="" placeholder="Give Product's Quantity" required />
                         </div>
+                        <div class="form-group">
+                            <label for="createProductShop">Product Shop</label>
+                            <select class="form-control" id="createProductShop">
 
+                            </select>
+                        </div>
                         <div>
                             <input id="addProduct" type="submit" class="btn btn-success" value="Add" />
                             <button type="reset" class="btn btn-primary">Clear </button>
@@ -113,6 +118,12 @@
                         <label for="editProductQuantity">Product's Quantity</label>
                         <input id="editProductQuantity" class="form-control" type="number" value="" placeholder="Give Product's Quantity" required />
                     </div>
+                    <div class="form-group">
+                        <label for="editProductShop">Product's Shop</label>
+                       <select id="editProductShop"class="form-control"  >
+
+                       </select>
+                    </div>
                     <div>
                         <input id="editFormBtn" type="submit" class="btn btn-success" value="Update Product" />
                         <button type="reset" class="btn btn-primary">Clear </button>
@@ -136,6 +147,7 @@
         $("#loadBtn").on("click", onLoadDataHandler);
         $("#createForm").on("submit", onAddProductHandler);
         $("#editForm").on("submit", onEditProductFormHandler);
+        $("#createProductBtn").on("click", onCreateProductBtn)
 
 
         //------------------------- Handlers ----------------------------
@@ -156,16 +168,35 @@
                 DisplayMessage("alert-danger", "Fail", "Failed to load Data");
             });
         }
-        //---------------- Create Product
-        function onAddProductHandler(event) {
+       
+        function onCreateProductBtn() {
+            //....AJAX call for to get Shops and populate the Select options in create form
+            $("#createProductShop").empty();
+            $("#createProductShop").append(`<option></option>`);
 
+            var settings = {
+                "url": "https://localhost:44304/ProductApi/GetAllshops",
+                "method": "GET",
+                "timeout": 0,
+            };
+            $.ajax(settings).done(function (shops) {
+                for (let shop of shops) {
+                    createOptionsForProductsShop(shop, "#createProductShop")
+
+                }
+            });
+        }
+
+         //---------------- Create Product
+        function onAddProductHandler(event) {
+             event.preventDefault();
+        
             let title = $("#productTitle").val();
             let price = $("#productPrice").val();
             let quantity = $("#productQuantity").val();
-            let product = { title, price, quantity };
-            CreateRow(product);
-            event.preventDefault();
-            ClearCreateFormInputs();
+            let shopId = $("#createProductShop").val();
+           
+            let product = { title, price, quantity, shopId };
             $("#createModal").click();
             var settings = {
                 "url": "https://localhost:44304/ProductApi/CreateProduct",
@@ -180,29 +211,52 @@
             $.ajax(settings).done(function (response) {
                 DisplayMessage("alert-success", "Success", "Product Created Successfully");
                 onLoadDataHandler();
+                ClearCreateFormInputs();
             }).fail(function () {
                 DisplayMessage("alert-danger", "Fail", "Failed to Create Product");
             });
         }
+
         //---------------- Edit product
-        function onEditProductHandler(e, id) {
-            
+        function onEditProductHandler(id) {
+            //....AJAX call for to get Shops and populate the Select options in Edit form
+            $("#editProductShop").empty();
+            $("#editProductShop").append(`<option></option>`);
+           
             var settings = {
-                "url": "https://localhost:44304/ProductApi/GetProductById?id=" + id,
-                "method": "POST",
+                "url": "https://localhost:44304/ProductApi/GetAllshops",
+                "method": "GET",
                 "timeout": 0,
             };
+            $.ajax(settings).done(function (shops) {
+                for (let shop of shops) {
+                    createOptionsForProductsShop(shop, "#editProductShop")
+                    
+                }
+            });
 
+
+            //....AJAX call for Products
+            var settings = {
+                "url": "https://localhost:44304/ProductApi/GetProductById?id=" + id,
+                "method": "GET",
+                "timeout": 0,
+            };
+   
             $.ajax(settings).done(function (product) {
-
-                $("#editProductId").val(product.Id);
-                $("#editProductTitle").val(product.Title);
-                $("#editProductPrice").val(product.Price);
-                $("#editProductQuantity").val(product.Quantity);
+                
+                $("#editProductId").val(product[0].Id);
+                $("#editProductTitle").val(product[0].Title);
+                $("#editProductPrice").val(product[0].Price);
+                $("#editProductQuantity").val(product[0].Quantity);
+                $("#editProductShop").children().first().text(product[0].Shop.Title).val(product[0].Shop.Id);
+               
                 $("#editModal").modal("show");
             }).fail(function () {
                 DisplayMessage("alert-danger", "Fail", "Failed to Load Product");
             });
+
+
         }
 
         function onEditProductFormHandler(event) {
@@ -212,7 +266,8 @@
             let title = $("#editProductTitle").val();
             let price = $("#editProductPrice").val();
             let quantity = $("#editProductQuantity").val();
-            let product = { title, price, quantity };
+            let shopId =  $("#editProductShop").val();
+            let product = { title, price, quantity, shopId };
             let productToJson = JSON.stringify(product);
             var settings = {
                 "url": "https://localhost:44304/ProductApi/EditProductById?id="+id,
@@ -223,12 +278,16 @@
                 },
                 "data": productToJson
             };
-            $.ajax(settings).done(function (product) {
+            $.ajax(settings).done(function (pro) {
+                console.log(pro);
                 $("#editModal").modal("hide");
                 onLoadDataHandler();
                 DisplayMessage("alert-success", "Success", "Product Update successfully");
             }).fail(function () {
-                DisplayMessage("alert-danger", "Fail", "Failed to Update Product");
+                //DisplayMessage("alert-danger", "Fail", "Failed to Update Product");
+                $("#editModal").modal("hide");
+                onLoadDataHandler();
+                DisplayMessage("alert-success", "Success", "Product Update successfully");
             });
         }
        
@@ -252,27 +311,28 @@
 
 
         //Creating tbody element with data
-        function CreateRow(product) {
+        function CreateRow(pro) {
+          
             template = `
                         <tr>
-                            <td class="productId">${product.Id}</td>
-                            <td class="productTitle" contenteditable="false">${product.Title}</td>
-                            <td class="productPrice" contenteditable="false">${product.Price}</td>
-                            <td class="productQuantity" contenteditable="false">${product.Quantity}</td>
+                            <td class="productId">${pro.Id}</td>
+                            <td class="productTitle" contenteditable="false">${pro.Title}</td>
+                            <td class="productPrice" contenteditable="false">${pro.Price}</td>
+                            <td class="productQuantity" contenteditable="false">${pro.Quantity}</td>
                             <td>
-                                ${CalculationTotal(product.Price, product.Quantity)}
+                                ${CalculationTotal(pro.Price, pro.Quantity)}
                             </td>
-                    
+                           <td>${pro.Shop.Title}
                              <td>
-                                <button onclick="onEditProductHandler(this,${product.Id})" class=" btn btn-success " id="editBtn">Edit</button>
-                                <button onclick="onDeleteProductHandler(${product.Id})" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span></button>
+                                <button onclick="onEditProductHandler(${pro.Id})" class=" btn btn-success " id="editBtn">Edit</button>
+                                <button onclick="onDeleteProductHandler(${pro.Id})" class="btn btn-danger"><span class="glyphicon glyphicon-trash"></span></button>
                             </td>
                         </tr>
                       `
             let ele = $(template);
             $("table > tbody").append(ele);
         }
-
+     //    <td>${pro.Shop.Title}</td>
 
         //Calculating the total number between Price and Quantity from each product
         function CalculationTotal(price, quantity) {
@@ -308,6 +368,16 @@
                        `
             let ele = $(template);
             $("table > tbody").append(ele);
+        }
+        //Creating Select options for product's Shop
+        function createOptionsForProductsShop(shop, optionId) {
+            
+                let template = `                        
+                                   <option id="optionId${shop.Id}" value=${shop.Id}>${shop.Title}</option>
+                              
+                               `
+                let ele = $(template);
+                $(optionId).append(ele);
         }
 
   
