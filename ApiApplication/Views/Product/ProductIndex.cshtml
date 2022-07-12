@@ -170,9 +170,9 @@
         }
        
         function onCreateProductBtn() {
-            //....AJAX call for to get Shops and populate the Select options in create form
+            //....AJAX call to get Shops and populate the Select options in create form
             $("#createProductShop").empty();
-            $("#createProductShop").append(`<option></option>`);
+            $("#createProductShop").append(`<option value=""></option>`);
 
             var settings = {
                 "url": "https://localhost:44304/ProductApi/GetAllshops",
@@ -219,7 +219,7 @@
 
         //---------------- Edit product
         function onEditProductHandler(id) {
-            //....AJAX call for to get Shops and populate the Select options in Edit form
+            //....AJAX call to get Shops and populate the Select options in Edit form
             $("#editProductShop").empty();
             $("#editProductShop").append(`<option></option>`);
            
@@ -245,11 +245,11 @@
    
             $.ajax(settings).done(function (product) {
                 
-                $("#editProductId").val(product[0].Id);
-                $("#editProductTitle").val(product[0].Title);
-                $("#editProductPrice").val(product[0].Price);
-                $("#editProductQuantity").val(product[0].Quantity);
-                $("#editProductShop").children().first().text(product[0].Shop.Title).val(product[0].Shop.Id);
+                $("#editProductId").val(product.Id);
+                $("#editProductTitle").val(product.Title);
+                $("#editProductPrice").val(product.Price);
+                $("#editProductQuantity").val(product.Quantity);
+                $("#editProductShop").children().first().text(product.ShopTitle).val(product.ShopId);
                
                 $("#editModal").modal("show");
             }).fail(function () {
@@ -283,7 +283,7 @@
                 $("#editModal").modal("hide");
                 onLoadDataHandler();
                 DisplayMessage("alert-success", "Success", "Product Update successfully");
-            }).fail(function () {
+            }).fail(function () {    // Problem here
                 //DisplayMessage("alert-danger", "Fail", "Failed to Update Product");
                 $("#editModal").modal("hide");
                 onLoadDataHandler();
@@ -332,7 +332,7 @@
             let ele = $(template);
             $("table > tbody").append(ele);
         }
-     //    <td>${pro.Shop.Title}</td>
+
 
         //Calculating the total number between Price and Quantity from each product
         function CalculationTotal(price, quantity) {
@@ -342,17 +342,17 @@
         //Display the apropriate message for every occasion
         function DisplayMessage(alerType, messageType, message) {
             let template = `
-                                                    <div class="alert ${alerType} alert-dismissible">
-                                                        <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
-                                                        <strong>${messageType}!</strong> ${message}.
-                                                    </div>
-                                                  `
+                             <div class="alert ${alerType} alert-dismissible">
+                                 <a href="#" class="close" data-dismiss="alert" aria-label="close">&times;</a>
+                                 <strong>${messageType}!</strong> ${message}.
+                             </div>
+                           `
             $("#statusMsg").append(template);
             FadeOutStatusMessage();
         }
         //For the pop up alert message to automatically fade out
         function FadeOutStatusMessage() {
-            $("#statusMsg").fadeOut(4000);
+            $("#statusMsg").children().fadeOut(3000);
         }
         //Clearing the input values in the Create Form
         function ClearCreateFormInputs() {

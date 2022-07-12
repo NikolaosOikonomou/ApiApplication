@@ -15,8 +15,8 @@ namespace ApiApplication.Controllers.ApiControllers
         private ApplicationDbContext db = new ApplicationDbContext();
 
         private ProductRepository productRepo;
-
-        private ShopRepository shopRepo;
+        
+        private ShopRepository shopRepo;//--->Need to Move it with ActionResult GetAllShops() method 
 
         public ProductApiController()
         {
@@ -32,8 +32,8 @@ namespace ApiApplication.Controllers.ApiControllers
                 Title = x.Title,
                 Price = x.Price,
                 Quantity = x.Quantity,
-                ShopId = x.ShopId,
-                Shop = new Shop { Title = x.Shop?.Title }
+                ShopId = x?.ShopId,
+                Shop = new Shop { Id = x.Id, Title = x.Shop?.Title }
             }).ToList();
 
 
@@ -47,21 +47,23 @@ namespace ApiApplication.Controllers.ApiControllers
             {
                 return new HttpStatusCodeResult(HttpStatusCode.BadRequest);
             }
-            var product = productRepo.GetAll().Where(x => x.Id == id).Select(x => new Product
-            {
-                Id = x.Id,
-                Title = x.Title,
-                Price = x.Price,
-                Quantity = x.Quantity,
-                ShopId = x.ShopId,
-                Shop = new Shop { Id = x.Shop?.Id, Title = x.Shop?.Title, Region = x.Shop?.Region}
-            });
+            var product = productRepo.GetById(id);
+         
             if (product == null)
             {
                 return new HttpStatusCodeResult(HttpStatusCode.NotFound);
             }
-
-            return Json(product, JsonRequestBehavior.AllowGet);
+      
+            var pro = new
+            {
+                Id = product.Id,
+                Title = product.Title,
+                Price = product.Price,
+                Quantity = product.Quantity,
+                ShopId = product.Shop?.Id,
+                ShopTitle = product.Shop?.Title,
+            };
+            return Json(pro, JsonRequestBehavior.AllowGet);
 
         }
 
@@ -115,6 +117,7 @@ namespace ApiApplication.Controllers.ApiControllers
         [HttpPost]
         public ActionResult CreateProduct(Product product)
         {
+
             if (ModelState.IsValid)
             {
                 productRepo.Add(product);
