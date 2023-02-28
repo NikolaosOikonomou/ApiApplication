@@ -6,7 +6,7 @@ Repositories:
 Using Repository layer to connect to the database in order to draw the disered data.
 
 Contollers:
-Having Product controller for the View and ProductApi where the Action Result methods exist.Returning data in Json form.
+Having Product controller for the Index View and ProductApi where the Action Result methods exist.Returning data in Json form.
 Using api action methods with ajax calls to implement CRUD operations for Product entity, with a pop up modal in view
 
 Seed method:
